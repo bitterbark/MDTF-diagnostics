@@ -116,6 +116,7 @@ class MDTFFramework(object):
             # specify pods by name
             pods = args.intersection(set(pod_data))
             self.pod_list.extend(list(pods))
+            print("DRBDBG ",self.pod_list)
             for arg in args.difference(set(pod_data)): # remainder:
                 print("WARNING: Didn't recognize POD {}, ignoring".format(arg))
             # exclude examples
@@ -239,8 +240,9 @@ class MDTFFramework(object):
     def main(self):
         # only run first case in list until dependence on env vars cleaned up
         for case_d in self.case_list[0:1]:
+            _log.info(f"DRBDBG L243")
             case_name = case_d.get('CASENAME', '<untitled>')
-            _log.info(f"### Framework: initialize {case_name}")
+            _log.info(f"### DRB Framework: initialize {case_name}")
             case = self.DataSource(case_d)
             case.setup()
             self.cases.append(case)

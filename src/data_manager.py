@@ -522,7 +522,9 @@ class DataSourceBase(AbstractDataSource, metaclass=util.MDTFABCMeta):
                 ', '.join(v.full_name for v in vars_to_query))
             self.pre_query_hook(vars_to_query)
             for v in vars_to_query:
+#                print("DRBDBG L525",v)
                 try:
+#                    print("DRBDBG L527",v.translation)
                     _log.info("Querying %s", v.translation)
                     self.query_dataset(v) # sets v.remote_data
                     if not v.remote_data:
@@ -920,6 +922,7 @@ class DataframeQueryDataSourceBase(DataSourceBase, metaclass=util.MDTFABCMeta):
         experiments (labeled by experiment_keys) to data found for that variable
         by this query (labeled by the data_keys).
         """
+#        print("DRBDBG L925",var)
         query_df = self._query_catalog(var)
         # assign set of sets of catalog row indices to var's remote_data attr
         # filter out empty entries = queries that failed.
@@ -1164,6 +1167,7 @@ class DataframeQueryDataSourceBase(DataSourceBase, metaclass=util.MDTFABCMeta):
         """Given one or more row indices in the catalog's dataframe (data_keys, 
         as found by query_dataset()), return the corresponding remote_paths.
         """
+#        print("DRBDBG L1170",data_key)
         if util.is_iterable(data_key):
             # loc requires list, not just iterable
             data_key = util.to_iter(data_key, list) 
@@ -1210,6 +1214,7 @@ class OnTheFlyDirectoryHierarchyQueryMixin(metaclass=util.MDTFABCMeta):
         """
         # in case CATALOG_DIR is subset of CASE_ROOT_DIR
         path_offset = len(os.path.join(self.attrs.CASE_ROOT_DIR, ""))
+#        print("DRBDBG L1217",self.attrs.CASE_ROOT_DIR)
         for root, _, files in os.walk(self.CATALOG_DIR):
             try:
                 self._DirectoryRegex.match(root[path_offset:])
@@ -1222,6 +1227,7 @@ class OnTheFlyDirectoryHierarchyQueryMixin(metaclass=util.MDTFABCMeta):
                     continue
                 try:
                     path = os.path.join(root, f)
+#                    print("DRBDBG L1230",path)
                     yield self._FileRegexClass.from_string(path, path_offset)
                 except util.RegexSuppressedError:
                     # decided to silently ignore this file
@@ -1313,8 +1319,12 @@ class SingleLocalFileDataSource(LocalFileDataSource):
     def query_dataset(self, var):
         """Verify that only a single file was found from each experiment.
         """
+#        print("DRBDBG L1316 ",var)
+
         super(SingleLocalFileDataSource, self).query_dataset(var)
+#        print("DRBDBG L1317 ",var)
         for data_key in var.remote_data.values():
+#            print("DRBDBG L1318 ",data_key)
             if len(data_key) != 1:
                 self._query_error_logger(
                     "Query found multiple files when one was expected:", data_key
