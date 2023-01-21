@@ -1120,7 +1120,8 @@ class NoPPDiagnostic(Diagnostic):
     def link_input_data_to_wkdir(self):
         if os.path.isdir(self.POD_OBS_DATA) and os.listdir(self.POD_OBS_DATA):
             for f in os.listdir(self.POD_OBS_DATA):
-                os.symlink(os.path.join(self.POD_OBS_DATA, f), os.path.join(self.POD_WK_DIR, 'obs', f))
+                if not os.path.lexists(os.path.join(self.POD_WK_DIR, 'obs', f)):  #don't overwrite if its there already
+                    os.symlink(os.path.join(self.POD_OBS_DATA, f), os.path.join(self.POD_WK_DIR, 'obs', f))
 
         for v in self.varlist.iter_vars():
             for kk, vv in v.env_vars.items():
@@ -1132,12 +1133,14 @@ class NoPPDiagnostic(Diagnostic):
                     # that match those in the POD settings file
                     inpath = os.path.join(self._parent.MODEL_DATA_DIR, freq, path_components[1])
                     Path(path_components[0]).mkdir(parents=True, exist_ok=True)
-                    try:
-                        os.path.isfile(inpath)
-                        os.symlink(os.path.join(self._parent.MODEL_DATA_DIR, freq, path_components[1]), vv)
-                    except FileNotFoundError:
-                        print("Can't find file", inpath, ". Continuing with run setup. POD may not complete")
-                        continue
+                    if not os.path.lexists(vv):  #don't overwrite if its there already
+                        try:
+                            os.path.isfile(inpath)
+                            os.symlink(os.path.join(self._parent.MODEL_DATA_DIR, freq, path_components[1]), vv)
+                        except FileNotFoundError:
+                            print("Can't find file", inpath, ". Continuing with run setup. POD may not complete")
+                            continue
+
 
     def pre_run_setup(self):
         """Perform filesystem operations and checks prior to running the POD.

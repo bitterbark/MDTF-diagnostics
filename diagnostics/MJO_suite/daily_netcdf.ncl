@@ -158,8 +158,9 @@ var_names = (/"u","v"/)
 do i=0,dimsizes(plevs)-1
    plev = plevs(i)
    do j=0,dimsizes(var_names)-1
-      var_name_3d_model = getenv(var_names(j)+"_var")                           ; as read from history files (3D field
-;      print(" var_name_3d_model "+var_name_3d_model)
+;      var_name_3d_model = getenv(var_names(j)+"_var")                           ; as read from history files (3D field
+       var_name_3d_model = var_names(j)
+      print("daily_netcdf:L162 var_name_3d_model "+var_name_3d_model)
 
 ;      print(" looking for "+var_names(j)+tostring(plev)+"_var")
       var_name_plev_model = getenv((var_names(j))+tostring(plev)+"_var")  ; as read from history files (pressure slice)

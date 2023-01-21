@@ -7,10 +7,11 @@ function pinterp (var_name:string,plev:float,fin:file,fin_ps:file)
 begin
 
         print(get_script_name()+":pinterp() interpolating "+var_name+" to pressure level "+plev+" mbar")
+
 	if (isvar("fin_ps")) then
-;	   print("found separate PS file ")
+	   print("found separate PS file ")
         else
-;   	   print("assuming PS in only input file ")
+   	   print("assuming PS in only input file ")
 	   fin_ps = fin
 	end if	   
 
@@ -257,6 +258,8 @@ else  ; DO WRITE NEW FILE
 
     f_3d    = addfile(file_3d,"r")
     f_ps    = addfile(file_ps,"r")
+    print("DRBDBG ps file "+file_ps)
+    print("DRBDBG 3d file "+file_3d)
     var_1 = pinterp(var_name_in_3d,plev,f_3d,f_ps)
     var = var_1($time_coord$|i1:i2,{$lat_coord$|-40:40},$lon_coord$|:)
 
