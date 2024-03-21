@@ -80,9 +80,14 @@ Obtaining supporting data
 
 Supporting observational data and sample model data are available via anonymous FTP from ftp://ftp.cgd.ucar.edu/archive/mdtf. The observational data is required for the PODs’ operation, while the sample model data is optional and only needed for test and demonstration purposes. The files you will need to download are:
 
+
 - Digested observational data (159 Mb): `MDTF_v2.1.a.obs_data.tar <ftp://ftp.cgd.ucar.edu/archive/mdtf/MDTF_v2.1.a.obs_data.tar>`__.
-- NCAR-CESM-CAM sample data (12.3 Gb): `model.QBOi.EXP1.AMIP.001.tar <ftp://ftp.cgd.ucar.edu/archive/mdtf/model.QBOi.EXP1.AMIP.001.tar>`__.
-- NOAA-GFDL-CM4 sample data (4.8 Gb): `model.GFDL.CM4.c96L32.am4g10r8.tar <ftp://ftp.cgd.ucar.edu/archive/mdtf/model.GFDL.CM4.c96L32.am4g10r8.tar>`__.
+- NCAR-CESM-CAM sample data
+  - version 3
+    <a href="https://app.globus.org/file-manager/collections/200c3a02-0c49-4e3c-ad24-4a24db9b1c2d/overview">Historical NCAR CESM2/CAM4</a>, 1995-2005 (for MDTF version 3)
+  - version 2(12.3 Gb): `model.QBOi.EXP1.AMIP.001.tar <ftp://ftp.cgd.ucar.edu/archive/mdtf/model.QBOi.EXP1.AMIP.001.tar>`__.
+<a href="https://app.globus.org/file-manager/collections/200c3a02-0c49-4e3c-ad24-4a24db9b1c2d/overview">Historical run of NCAR CESM2/CAM4</a>, 1977-1981 (for MDTF version 2)
+  - NOAA-GFDL-CM4 sample data (4.8 Gb): `model.GFDL.CM4.c96L32.am4g10r8.tar <ftp://ftp.cgd.ucar.edu/archive/mdtf/model.GFDL.CM4.c96L32.am4g10r8.tar>`__.
 
 The default test case uses the ``QBOi.EXP1.AMIP.001`` sample dataset, and the ``GFDL.CM4.c96L32.am4g10r8`` sample
 dataset is only for testing the `MJO Propagation and Amplitude POD <../sphinx_pods/MJO_prop_amp.html>`__.
