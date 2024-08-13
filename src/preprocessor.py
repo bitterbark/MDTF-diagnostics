@@ -1062,10 +1062,13 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
         associated with the POD variable *var*.
         """
         var.log.info("Preprocessing %s.", var)
-        ds = self.load_ds(var)
-        ds = self.process_ds(var, ds)
-        self.write_ds(var, ds)
-        var.log.debug("Successful preprocessor exit on %s.", var)
+        if (True): #DRBDBG Set True to skip the pre-processor easily
+            var.log.info("SKIPPING Preprocessing")
+        else:
+            ds = self.load_ds(var)
+            ds = self.process_ds(var, ds)
+            self.write_ds(var, ds)
+            var.log.debug("Successful preprocessor exit on %s.", var)
 
 
 class SingleFilePreprocessor(MDTFPreprocessorBase):

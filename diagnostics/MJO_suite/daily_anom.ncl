@@ -8,7 +8,7 @@ load "$POD_HOME/calc_utils.ncl"
 
 setfileoption("nc", "Format", getenv("MDTF_NC_FORMAT"))
 
-begin
+begin 
 
 routine_name = "daily_anom"
 casename = getenv("CASENAME")
@@ -29,27 +29,25 @@ if ( delete_existing ) then
   system("ls "+file_dir+"/*anom*.nc")
 end if
 
+
 var_names = (/ "pr","rlut","u200","u850","v200","v850" /)
-
 do i=0,dimsizes(var_names)-1
-
   var_name = var_names(i)
-  print(routine_name+" starting variable "+var_name)
 
   file_in   = file_dir +"/"+casename+"."+var_name+".day.nc"
   file_out  = file_dir +"/"+casename+"."+var_name+".day.anom.nc"
 
-  if( isfilepresent(file_out) .and. (.not.delete_existing)) then
+  if( fileexists(file_out) .and. (.not.delete_existing)) then
     print(file_out+" already exists. To force recalculation, set daily_anom.ncl delete_existing = True")
 
   else
 
-    if( isfilepresent(file_out) .and. (delete_existing)) then
+    if( fileexists(file_out) .and. (delete_existing)) then
       print(file_out+" already exists. Overwriting since delete_existing = "+delete_existing)
       system("rm "+file_out)
     end if
  
-    if( isfilepresent(file_in) ) then
+    if( fileexists(file_in) ) then
     	print("reading "+file_in)
 	f = addfile(file_in,"r")
 	time = f->$time_coord$
@@ -86,9 +84,9 @@ do i=0,dimsizes(var_names)-1
  
       else
         print("ERROR: missing file that should have been made by daily_netcdf.ncl "+file_in)
-      end if ; if( isfilepresent(file_in)
-    end if ; isfilepresent(wkdir+ ... anom ...
-    
-  end do
+      end if ; if( fileexists(file_in)
+    end if ; fileexists(wkdir+ ... anom ...
+
+end do
 
 end

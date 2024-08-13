@@ -125,45 +125,95 @@
       "units": "Pa",
       "ndim": 3
     },
-    // radiative fluxes:
-    // "rsus": {
-    //   "standard_name": "surface_upwelling_shortwave_flux_in_air",
-    //   "units": "W m-2",
-    //   "ndim": 3
-    // },
-    // "rsds": {
-    //   "standard_name": "surface_downwelling_shortwave_flux_in_air",
-    //   "units": "W m-2",
-    //   "ndim": 3
-    // },
-    // "rsdt": {
-    //   "standard_name": "toa_incoming_shortwave_flux",
-    //   "units": "W m-2",
-    //   "ndim": 3
-    // },
-    // "rsut": {
-    //   "standard_name": "toa_outgoing_shortwave_flux",
-    //   "units": "W m-2",
-    //   "ndim": 3
-    // },
-    "FLUS": {
-      // correct name? Guessed according to pattern -- no FLUS, only the net combination?
+//
+// --- CESM radiation fluxes ---
+//  At the surface,   CESM saves net and downwelling, so upwelling must be calculated (FLUS, FSUS)
+//  At the model top, CESM saves net and upwelling  , so downwelling must be calculated (FSDT)
+// “net” means net upward for longwave radiation, net downward for shortwave radiation
+// FLNS	(longwave , so + means upward)   = FLUS - FLDS  (calculate FLUS = FLDS + FLNS)
+// FSNS (shortwave, so + means downward) = FSDS - FSUS  (calculate FSUS = FSDS - FSNS)
+// FSDT = FSUT + FSNT
+//
+    "FLDS": {  //rlds, long_name = "Downwelling longwave flux at surface"
       "standard_name": "surface_upwelling_longwave_flux_in_air",
       "units": "W m-2",
       "ndim": 3
     },
-    "FLDS": {
-      "standard_name": "surface_downwelling_longwave_flux_in_air",
+    "FLDSC": { //rldscs, long_name = "Clearsky Downwelling longwave flux at surface"
+      "standard_name": "surface_downwelling_longwave_flux_in_air_assuming_clear_sky",
       "units": "W m-2",
       "ndim": 3
     },
-    "FLUT": {
+    "FLUT": { //rlut, long_name  = "Upwelling longwave flux at top of model"
       "standard_name": "toa_outgoing_longwave_flux",
       "units": "W m-2",
       "ndim": 3
+          },
+    "FLUTC": { //rlutcs, long_name = "Clearsky upwelling longwave flux at top of model"
+      "standard_name": "toa_outgoing_longwave_flux_assuming_clear_sky",
+      "units": "W m-2",
+      "ndim": 3
     },
-     "FLNT": {
-      "standard_name": "net_upward_longwave_flux",
+     "FLNT": { //rlut almost (longwave is mostly upwelling at the top)
+     "standard_name": "toa_net_longwave_flux", //fake
+     "long_name" : "Net longwave flux at top of model",
+      "units": "W m-2",
+      "ndim": 3
+    },
+     "FLNTC": { //rlutcs almost (longwave is mostly upwelling at the top)
+     "standard_name": "toa_net_longwave_flux_assuming_clear_sky", //fake	 
+     "long_name" : "Clearsky Net longwave flux at top of model",
+      "units": "W m-2",
+      "ndim": 3
+     },
+    "FLNS": {  // No standard_name. Would be: "surface_net_longwave_flux_in_air",
+    "standard_name": "surface_net_longwave_flux", //fake
+    "long_name": "Net longwave flux at surface",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FLNSC": { // No standard_name. Would be: "surface_net_longwave_flux_in_air_assuming_clear_sky",
+    "standard_name": "surface_net_longwave_flux_assuming_clear_sky", //fake
+    "long_name": "Clearsky Net longwave flux at surface",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSDS": {  //rsds, long_name = "Downwelling solar flux at surface"
+      "standard_name": "surface_downwelling_shortwave_flux_in_air",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSDSC": {  //rsds, long_name = "Clearsky Downwelling solar flux at surface"
+      "standard_name": "surface_downwelling_shortwave_flux_in_air_assuming_clear_sky",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSNS": {  // No standard_name. Would be: "surface_net_shortwave_flux_in_air",
+    "standard_name": "surface_net_shortwave_flux", //fake
+    "long_name": "Net solar flux at surface",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSNSC": { // No standard_name. Would be: "surface_net_shortwave_flux_in_air_assuming_clear_sky",
+    "standard_name": "surface_net_shortwave_flux_assuming_clear_sky", //fake
+    "long_name": "Clearsky Net solar flux at surface",		     
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSNTOA": {  // No standard_name. Would be: "top of atmosphere_net_shortwave_flux_in_air",
+    "standard_name": "toa_net_shortwave_flux", //fake
+    "long_name": "Net solar flux at top of atmosphere",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSNTOAC": { // No standard_name. Would be: "top of atmosphere_net_shortwave_flux_in_air_assuming_clear_sky",
+    "standard_name": "toa_net_shortwave_flux_assuming_clear_sky", //fake
+    "long_name": "Clearsky Net solar flux at top of atmosphere",
+      "units": "W m-2",
+      "ndim": 3
+    },
+    "FSUTOA": {  //rsut "long_name": "Upwelling solar flux at top of atmosphere"
+      "standard_name" : "toa_outgoing_shortwave_flux",
       "units": "W m-2",
       "ndim": 3
     },
