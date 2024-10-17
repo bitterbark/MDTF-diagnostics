@@ -83,6 +83,30 @@ class HTMLSourceFileMixin:
         log_file.write(self.obj._out_file_log.buffer_contents())
         log_file.close()
 
+    def chown_files_and_dirs(self,target_directory):
+        """
+        Recursively sets permissions for all files and directories within the output director
+        so that they can be seen from a web browser
+        - All files in the directory tree will be made 0o644 (read/writeable by owner, readable by group and others)
+        - All dirs  in the directory tree will be made 0o755 (read/write/exec by owner, read/exec by group and others)
+        
+        Args:
+        target_directory (str): The root directory under which permissions are to be modified.
+        """
+
+        # Traverse the directory
+        for root, dirs, files in os.walk(target_directory):
+            # Change permission for directories
+            for dir_name in dirs:
+                dir_path = os.path.join(root, dir_name)
+                # Make directories readable and executable by everyone
+                os.chmod(dir_path, 0o755)  # Readable and executable by owner, group, others
+                
+            # Change permission for files
+            for file_name in files:
+                file_path = os.path.join(root, file_name)
+                # Make files readable by everyone
+                os.chmod(file_path, 0o644)  # Readable by owner, group, others
 
 class HTMLPodOutputManager(HTMLSourceFileMixin):
     """Performs cleanup tasks specific to a single POD when that POD has
@@ -194,12 +218,12 @@ class HTMLPodOutputManager(HTMLSourceFileMixin):
                 raise util.MDTFFileNotFoundError(f"No .png generated from {f}.")
             elif len(out_files) == 1:
                 # got one .png, so remove suffix.
-                os.rename(out_files[0], f_stem + '.png')
+                os.replace(out_files[0], f_stem + '.png')
             else:
                 # Multiple .pngs. Drop the MDTF_TEMP suffix and renumber starting
                 # from zero (forget which POD requires this.)
                 for n in range(len(out_files)):
-                    os.rename(
+                    os.replace(
                         f_stem + f'_MDTF_TEMP_{n+1}.png',
                         f_stem + f'-{n}.png'
                     )
@@ -399,8 +423,11 @@ class HTMLOutputManager(AbstractOutputManager, HTMLSourceFileMixin):
             self.obj.log.info("%s: Overwriting '%s'.", self.obj.full_name, out_path)
         tar_flags = [f"--exclude=.{s}" for s in ('netCDF','nc','ps','PS','eps')]
         tar_flags = ' '.join(tar_flags)
+        WK_DIR_type = type(self.WK_DIR)
+        WK_DIR_head, WK_DIR_tail = os.path.split(self.WK_DIR)
+        print(f"tar command: tar {tar_flags} -czf {out_path} -C {WK_DIR_head} {WK_DIR_tail}'")
         util.run_shell_command(
-            f'tar {tar_flags} -czf {out_path} -C {self.WK_DIR} .',
+            f'tar {tar_flags} -czf {out_path} -C {WK_DIR_head} {WK_DIR_tail}',
             dry_run = self.dry_run
         )
         return out_path
@@ -452,6 +479,7 @@ class HTMLOutputManager(AbstractOutputManager, HTMLSourceFileMixin):
         self.make_html()
         self.backup_config_files()
         self.write_data_log_file()
+        self.chown_files_and_dirs(self.OUT_DIR)
         if self.make_variab_tar:
             _ = self.make_tar_file()
         self.copy_to_output()

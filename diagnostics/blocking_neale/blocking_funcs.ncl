@@ -176,13 +176,26 @@ begin
 
   if (year0.lt.min(time_y_in)) then
     print("WARNING: user requested start year "+year0+" precedes data start year "+min(time_y_in))
-    print("         proceeding with whatever is found")
-  end if
+    year0 = tointeger(min(time_y_in))
+    print("         updated start year to "+year0)
+   
+end if
 
+    
   if (year1.gt.max(time_y_in)) then
     print("WARNING: user requested end year "+year1+" is after data end year "+max(time_y_in))
-    print("         proceeding with whatever is found")
-  end if
+    year1 = tointeger(max(time_y_in))
+    print("         updated start year to "+year1)	
+end if
+
+    
+  if (year1.lt.year0) then
+    print("WARNING: user requested end year "+year1+" is before start year "+year0)
+    year1 = tointeger(max(time_y_in))
+    print("         updated end year to "+year1)	
+end if
+
+
 end
 ; ------------------------------------------------------
 function find_required_days(year0,year1,period_name,time_ymd)
@@ -203,11 +216,11 @@ begin
    print("Time range in file  : "+time_y_in(0)+" "+time_m_in(0)+" "+time_d_in(0)+" - "+time_y_in(ntime-1)+" "+time_m_in(ntime-1)+" "+time_d_in(ntime-1))
 
 ; Find required days of whole input data period.
-   check_time_range(year0,year1,time_y_in)
+   check_time_range(year0,year1,time_y_in)   ; Updates year0 and year1 if not in range
    if (period_name.eq."ANN") then
      idays = ind(time_y_in.ge.year0.and.time_y_in.le.year1)
    else
-     idays = ind((time_y_in.ge.year0.and.time_y_in.le.year1).and.(time_m_in.eq.mnths(0).or.time_m_in.eq.mnths(1).or.time_m_in.eq.mnths(2)))  
+     idays = ind((time_y_in.ge.year0.and.time_y_in.le.year1).and.(time_m_in.eq.mnths(0).or.time_m_in.eq.mnths(1).or.time_m_in.eq.mnths(2)))
    end if
 
    ndays = dimsizes(idays)	
@@ -818,7 +831,10 @@ begin
 
   ;"zg" set in diagnostics/blocking_neale/settings.json
   ;model variable name set in data/fieldlist_$model.jsonc
-  var_names = set_from_env("zg_var",opts)  
+  var_names = set_from_env("zg_var",opts)
+  print("WARNING: MDTF overriding var_name OLD: "+var_names)
+  var_names = "zg"
+  print("WARNING: MDTF overriding var_name NEW: "+var_names)
   file_names = model_data_path  
 
 
