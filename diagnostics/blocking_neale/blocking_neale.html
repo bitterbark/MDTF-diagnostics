@@ -1,0 +1,64 @@
+<!--
+    HTML output template for the blocking_neale POD.
+    The framework fills in the {{...}} variables and copies this file to $WORK_DIR.
+
+    PS files saved by the POD are converted by the framework into bitmaps:
+    <WORK_DIR>/model/PS/<plot_name>.ps -> <WORK_DIR>/model/<plot_name>.png
+    <WORK_DIR>/obs/PS/<plot_name>.ps   -> <WORK_DIR>/obs/<plot_name>.png
+    so each link only needs the relative path, eg. "model/<plot_name>.png".
+
+    Figures that exist once per run (combined, OBS, CAM5) are linked here.
+    Per-case figures depend on how many cases were run, so blocking_neale.py
+    writes them to blocking_neale_cases.html in $WORK_DIR, linked below.
+-->
+<html>
+<head>
+<title>Blocking Diagnostic (Rich Neale)</title>
+</head>
+<body>
+<img src="../mdtf_diag_banner.png">
+<h3>Blocking Diagnostic (Rich Neale)</h3>
+<p>
+The diagnostic evaluates the blocking frequency in a model by longitude and season
+as determined by the meridional gradient above a threshold value of daily
+500mb height following <a href="https://doi.org/10.1007/s003820050230">D'Andrea et al 1998</a>.
+</p>
+<p>
+The annual cycle of blocking frequency is shown for each analyzed case,
+the reference ensemble (CAM5) and the observational products (ERAI &amp; MERRA)
+requested, in individual Hovm&uuml;ller figures (longitude vs time). All
+cases and references are combined in a line plot of blocking frequency
+vs longitude. Each figure is currently shown for ANN.
+</p>
+
+<TABLE>
+<TR>
+<TH style='width: 200px' align=left>Average seasonal cycle
+<TD style='width: 200px' align=center><A href=model/block_freq_season.png>Combined cases and references</A>
+
+<TR>
+<TH style='width: 200px' align=left>Annual cycle
+<TD style='width: 200px' align=center><A href=blocking_neale_cases.html>Each MDTF case</A>
+<TD style='width: 200px' align=center><A href=obs/block_freq_anncycle.OBS.png>OBS (ERAI, MERRA)</A>
+<TD style='width: 200px' align=center><A href=model/block_freq_anncycle.CAM5.png>CAM5 ensemble</A>
+</TABLE>
+
+<p>
+<TABLE style="font-size:12px; color:gray">
+<TR><TH align=left>POD Settings
+<TR><TD> SEASON <TD> ANN
+<TR><TD> MDTF_BLOCKING_OBS <TD> "{{MDTF_BLOCKING_OBS}}"
+<TR><TD> MDTF_BLOCKING_OBS_USE_CASE_YEARS <TD> "{{MDTF_BLOCKING_OBS_USE_CASE_YEARS}}"
+<TR><TD> ERA years <TD> "{{MDTF_BLOCKING_OBS_ERA_FIRSTYR}} - {{MDTF_BLOCKING_OBS_ERA_LASTYR}}"
+<TR><TD> MERRA years <TD> "{{MDTF_BLOCKING_OBS_MERRA_FIRSTYR}} - {{MDTF_BLOCKING_OBS_MERRA_LASTYR}}"
+<TR><TD> CAM5 years <TD> "{{MDTF_BLOCKING_OBS_CAM5_FIRSTYR}} - {{MDTF_BLOCKING_OBS_CAM5_LASTYR}}"
+<TR><TD> MDTF_BLOCKING_CAM3 <TD> "{{MDTF_BLOCKING_CAM3}}"
+<TR><TD> MDTF_BLOCKING_CAM4 <TD> "{{MDTF_BLOCKING_CAM4}}"
+<TR><TD> MDTF_BLOCKING_CAM5 <TD> "{{MDTF_BLOCKING_CAM5}}"
+<TR><TD> MDTF_BLOCKING_READ_DIGESTED <TD> "{{MDTF_BLOCKING_READ_DIGESTED}}"
+<TR><TD> MDTF_BLOCKING_WRITE_DIGESTED <TD> "{{MDTF_BLOCKING_WRITE_DIGESTED}}"
+<TR><TD> MDTF_BLOCKING_DEBUG <TD> "{{MDTF_BLOCKING_DEBUG}}"
+</TABLE>
+</p>
+</body>
+</html>

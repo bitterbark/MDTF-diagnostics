@@ -786,7 +786,7 @@ func_name = "get_years_run"
 ; Hard-coded indices for OBS; redundant dimension for MODEL. Improve this when we move to python!
 ; dims:  [FIRST,LAST] x [ ERA, MERRA]
 
-nruns = min((/ nruns,2 /))  ; make dimensions always longer than 1
+nruns = max((/ nruns,2 /))  ; make dimensions always longer than 1
 years_run = new((/2,nruns/),"integer")  
 
 print(func_name+" run_type:"+run_type+", use_case_years: "+use_case_years)
@@ -1826,7 +1826,7 @@ begin
 
   nfiles = dimsizes(all_cases@file_names)
 
-  path_out        = set_from_env("WK_DIR",False)
+  path_out        = set_from_env("WORK_DIR",False)
 
 ; These are hard-coded into mdtf/src/output_manger.py:convert_pod_figures
   path_out_model  = path_out +"/model/PS/"  ; will get season, + model block_freq
