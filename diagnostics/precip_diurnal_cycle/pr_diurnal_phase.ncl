@@ -549,6 +549,23 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
          ; print(tstart)
 ; Where in alll of input data is tstart?
           itm0 = ind(t_utc.eq.tstart)
+; bundy 2026-09-22: newer CAM stamps time-averaged output at the interval midpoint
+; (e.g. 01:30), which cd_calendar truncates to hour 01, matching the CMIP layout even
+; when date_int_offset=1 (CESM). If the requested start is missing, try the other
+; convention (hour 00 <-> hour 01) before giving up.
+          if (ismissing(itm0)) then
+            if (date_offset.eq.1) then
+              tstart_alt = tstart + 1
+            else
+              tstart_alt = tstart - 1
+            end if
+            itm0 = ind(t_utc.eq.tstart_alt)
+            if (.not.ismissing(itm0)) then
+              print("- Start date "+tstart+" not found, using alternate convention "+tstart_alt)
+              tstart = tstart_alt
+            end if
+            delete(tstart_alt)
+          end if
           if (ismissing(itm0)) then
             print("*** Requested start date does not exist in available data - exiting ...")
             exit
