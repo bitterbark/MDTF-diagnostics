@@ -1,5 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
+set -x
+set -v
 # This is a workaround to permit switching conda environments in a
 # non-interactive shell.
 # The script is what's placed in ~/.bashrc by 'conda init bash';

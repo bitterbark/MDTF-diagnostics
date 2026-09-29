@@ -1,14 +1,26 @@
 ; This file is part of the MJO_suite module of the MDTF code package (see LICENSE.txt)
 
-; FILE: daily_anom.ncl
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
+print("...L7")
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
+print("...L9")
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
+print("...L11")
 load "$POD_HOME/calc_utils.ncl"
-
-setfileoption("nc", "Format", getenv("MDTF_NC_FORMAT"))
+print("...L10")
 
 begin
+print("...L13")
+
+nc_format = getenv("MDTF_NC_FORMAT")
+print("...L16")
+if ((nc_format.eq."NetCDF4_Classic").or.(nc_format.eq."NETCDF4_CLASSIC")) then
+    nc_format = "NetCDF4Classic"
+    print("...L19")
+end if
+print("...L21")
+setfileoption("nc", "Format", nc_format)
+print("...L23")
 
 routine_name = "daily_anom"
 casename = getenv("CASENAME")
@@ -16,13 +28,21 @@ time_coord = getenv("time_coord")
 lat_coord = getenv("lat_coord")
 lon_coord = getenv("lon_coord")
 
-file_dir = getenv("WK_DIR")+"/model/netCDF/"
+print("...L23")
+; Use a path relative to WK_DIR (the process cwd, set by MDTF's
+; SubprocessRuntimeManager) instead of the full absolute path. NCL 6.6.2's
+; isfilepresent() copies its argument into a fixed 256-byte internal buffer
+; with no length check and aborts the whole process (glibc catches it as
+; "buffer overflow detected") once the path hits 256 characters, which long
+; CESM case names reach easily since the case name is repeated multiple
+; times in MDTF's generated work-directory path.
+file_dir = "model/netCDF/"
 datadir = getenv("DATADIR")
 yr1 = stringtointeger(getenv("FIRSTYR"))
 yr2 = stringtointeger(getenv("LASTYR"))
 start_date = yr1*10000+201
 end_date = (yr2+1)*10000+101
-
+print("...L30")
 delete_existing = False  ;True = overwrite, False = don't overwrite
 if ( delete_existing ) then
   print("WARNING: daily_anom.ncl deleting existing anom files")
@@ -30,10 +50,10 @@ if ( delete_existing ) then
 end if
 
 var_names = (/ "pr","rlut","u200","u850","v200","v850" /)
-
+print("...L38")
 do i=0,dimsizes(var_names)-1
-
   var_name = var_names(i)
+  print("... "+i+" "+var_name)
   print(routine_name+" starting variable "+var_name)
 
   file_in   = file_dir +"/"+casename+"."+var_name+".day.nc"
@@ -90,5 +110,5 @@ do i=0,dimsizes(var_names)-1
     end if ; isfilepresent(wkdir+ ... anom ...
     
   end do
-
+print("...L102")
 end

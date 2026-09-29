@@ -6,17 +6,26 @@
 ;;;                                      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+print("DRBDBG calc_utils L9")
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 ;load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
 
-setfileoption("nc", "Format", getenv("MDTF_NC_FORMAT"))
+nc_format = getenv("MDTF_NC_FORMAT")
+if ((nc_format.eq."NetCDF4_Classic").or.(nc_format.eq."NETCDF4_CLASSIC")) then
+    nc_format = "NetCDF4Classic"
+end if
 
-;; Local variables for alll plot routines ;;
+setfileoption("nc", "Format", nc_format)
+print("DRBDBG calc_utils using MDTF_NC_FORMAT "+nc_format)
 
+;; Local variables for all plot routines ;;
 pwks = "ps"        ; Output format (ps,X11,png,gif)
 _FillValue = -999  ; Missing value for FLOAT variables.
+
+
 
 
 ;;Routine bins input data into a number of bins.

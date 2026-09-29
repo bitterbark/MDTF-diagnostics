@@ -49,7 +49,7 @@ os.chdir(os.environ["DATADIR"])  # inputdata
 
 #OLR
 
-varlist = [("u200_var","U200_FILE"), ("u850_var","U850_FILE"), ("omega500_var", "OMEGA500_FILE"), 
+varlist = [("u200_var","U200_FILE"), ("u850_var","U850_FILE"), #drb("omega500_var", "OMEGA500_FILE"), 
     ("rlut_var", "RLUT_FILE"), ("pr_var", "PR_FILE")]
 
 

@@ -93,7 +93,7 @@ begin
 ;-------------------------------------------------------------------
   
   
-  debug = False     ;ideally this gets set for verbose >1 from mdtf 
+  debug = True     ;ideally this gets set for verbose >1 from mdtf 
   routine_name = "wkSpaceTime_driver.ncl"
   debug_print("Started ",routine_name,debug)
 
@@ -137,12 +137,15 @@ begin
       opt = True
     end if
 
+    ; Should check that all the env vars are set, otherwise we get an error
+   
     debug_print("DEBUG: wk comparing varname "+varName+" to "+ \
        getenv("pr_var") +" "+\
        getenv("rlut_var") +" "+\
        getenv("u200_var") +" "+\
-       getenv("u850_var") +" "+\
-       getenv("omega500_var"),\
+;drb       getenv("u850_var") +" "+\
+       getenv("u850_var"),\
+;drb       getenv("omega500_var"),\
        routine_name,\
        debug)
 
@@ -158,9 +161,9 @@ begin
     if (varName.eq.getenv("u850_var")) then
       set_contours_by_varname("U850",opt)
     end if
-    if (varName.eq.getenv("omega500_var")) then
-      set_contours_by_varname("OMEGA500",opt)
-    end if
+;drb    if (varName.eq.getenv("omega500_var")) then
+;      set_contours_by_varname("OMEGA500",opt)
+;    end if
   end if ; fix_clevs
 
   if ( debug ) then

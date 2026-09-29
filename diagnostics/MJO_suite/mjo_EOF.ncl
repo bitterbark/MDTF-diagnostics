@@ -6,8 +6,11 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"  
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"  
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl" 
+load "$POD_HOME/my_cam_diags.ncl"
+load "$POD_HOME/utils.ncl"
 
-setfileoption("nc", "Format", getenv("MDTF_NC_FORMAT"))
+ncl_nc_format = get_ncl_nc_format()
+setfileoption("nc", "Format", ncl_nc_format)
 
 begin
 ; ===========================================================
@@ -27,7 +30,6 @@ filename_v200 = file_dir+casename+".v200.day.anom.nc"
 filename_v850 = file_dir+casename+".v850.day.anom.nc"
 
 seasons_name = (/"winter","summer"/)
-
 
    neof    =  4
 

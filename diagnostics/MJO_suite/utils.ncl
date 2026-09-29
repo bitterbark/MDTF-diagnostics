@@ -1,6 +1,23 @@
 ; This file is part of the MJO_suite module of the MDTF code package (see LICENSE.txt)
 
-setfileoption("nc", "Format", getenv("MDTF_NC_FORMAT"))
+;================================================================================
+function get_ncl_nc_format()
+	 ; These drivers are python which the framework finds out
+	 ; But the NCL files need a slightly different NetCDF format
+
+	 begin
+
+	 print("DRBDBG L29 get_ncl_nc_format")
+	 nc_format = getenv("MDTF_NC_FORMAT")
+	 print("incoming MDTF_NC_FORMAT "+nc_format)
+	 if ((nc_format.eq."NetCDF4_Classic").or.(nc_format.eq."NETCDF4_CLASSIC")) then
+	    nc_format = "NetCDF4Classic"
+	    ;   nc_format = "NetCDF4"	
+	    print("changed MDTF_NC_FORMAT "+nc_format)
+	 end if
+
+	 return(nc_format)
+end
 
 ;================================================================================
 function pinterp (var_name:string,plev:float,fin:file,fin_ps:file)
