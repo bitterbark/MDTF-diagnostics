@@ -30,8 +30,8 @@
     "pod_env_vars" : {
 	"MDTF_BLOCKING_OBS"               : "True",  //both ERA & MERRA for now
         "MDTF_BLOCKING_OBS_USE_CASE_YEARS": "False", //if False, must set ERA/MERRA/CAM5 FIRST/LAST-YRS below
-	"MDTF_BLOCKING_OBS_ERA_FIRSTYR"   : 2010,    
-	"MDTF_BLOCKING_OBS_ERA_LASTYR"    : 2014,  
+	"MDTF_BLOCKING_OBS_ERA_FIRSTYR"   : 1995,    // local: ERAI digested file here covers 1979-2009
+	"MDTF_BLOCKING_OBS_ERA_LASTYR"    : 2009,
 	"MDTF_BLOCKING_OBS_MERRA_FIRSTYR" : 2009,  
 	"MDTF_BLOCKING_OBS_MERRA_LASTYR"  : 2011,  
 	"MDTF_BLOCKING_OBS_CAM5_FIRSTYR"  : 1979,     
