@@ -71,6 +71,8 @@
         "realm": "atmos",
         "units": "K",
         "frequency": "6hr",
+        // 6-hourly instantaneous (see doc/TC_MSE.rst); fluxes below are 6-hourly means
+        "cell_methods": "time: point",
         "dimensions": ["time","plev","lat","lon"]
       },
       "zg": {
@@ -78,6 +80,8 @@
         "realm": "atmos",
         "units": "m",
         "frequency": "6hr",
+        // 6-hourly instantaneous (see doc/TC_MSE.rst); fluxes below are 6-hourly means
+        "cell_methods": "time: point",
         "dimensions": ["time","plev","lat","lon"]
       },
       "hus": {
@@ -85,6 +89,8 @@
         "realm": "atmos",
         "units": "1",
         "frequency": "6hr",
+        // 6-hourly instantaneous (see doc/TC_MSE.rst); fluxes below are 6-hourly means
+        "cell_methods": "time: point",
         "dimensions": ["time","plev","lat","lon"]
       },
       "hfss": {
