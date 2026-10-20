@@ -446,11 +446,11 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
         do imonth=0,nmonths-1
           
           if (obs(irun).and.months(imonth).eq."02".and.any(run_years(iyear).eq.(/"1976","1980","1984","1988","1992","1996","2000","2004","2008"/))) ; leap year feb in obs?
-            wgt_mon = mwt(imonth)+1 ; Add 1 day to month weighting
+            wgt_mon = tofloat(mwt(imonth)+1) ; Add 1 day to month weighting
             wgt_tot = wgt_tot+1 ; Add 1 day to total weighting 
             leap_feb = " (leap year)"
           else
-            wgt_mon = mwt(imonth)
+            wgt_mon = tofloat(mwt(imonth))
             leap_feb = ""
           end if
           
@@ -523,15 +523,16 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
          end if
  
 ; Requested start time and index in data
-          if (date_offset.eq.0) then
-            ; CMIP / GFDL date index
-            tstart = toint(run_years(iyear))*1000000+toint(months(imonth))*10000+(1*101) 
-          else if (date_offset.eq.1) then
-            ; CESM native date index
-            tstart = toint(run_years(iyear))*1000000+toint(months(imonth))*10000+(1*100) 
-          end if
-          end if
-          print(tstart)
+          if (obs(irun)) then
+            if (date_offset.eq.0) then
+              ; CMIP / GFDL date index
+              tstart = toint(run_years(iyear))*1000000+toint(months(imonth))*10000+(1*101) 
+            else if (date_offset.eq.1) then
+              ; CESM native date index
+              tstart = toint(run_years(iyear))*1000000+toint(months(imonth))*10000+(1*100) 
+            end if
+            end if
+            print(tstart)
 
 ; TSJ edit 2021-01-12: This step no longer necessary with the replacement of 
 ; ut_calendar by cd_calendar. See 
@@ -545,74 +546,137 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
 ;             print("- Adjusting start date for CAM standalone runs which begin 0000 and ut_calendar switches in to 0001")
 ;           end if
 
-         ; print(t_utc)
-         ; print(tstart)
+           ; print(t_utc)
+           ; print(tstart)
 ; Where in alll of input data is tstart?
-          itm0 = ind(t_utc.eq.tstart)
-; bundy 2026-09-22: newer CAM stamps time-averaged output at the interval midpoint
-; (e.g. 01:30), which cd_calendar truncates to hour 01, matching the CMIP layout even
-; when date_int_offset=1 (CESM). If the requested start is missing, try the other
-; convention (hour 00 <-> hour 01) before giving up.
-          if (ismissing(itm0)) then
-            if (date_offset.eq.1) then
-              tstart_alt = tstart + 1
-            else
-              tstart_alt = tstart - 1
+            itm0 = ind(t_utc.eq.tstart)
+            if (ismissing(itm0)) then
+              print("*** Requested start date does not exist in available data - exiting ...")
+              exit
             end if
-            itm0 = ind(t_utc.eq.tstart_alt)
-            if (.not.ismissing(itm0)) then
-              print("- Start date "+tstart+" not found, using alternate convention "+tstart_alt)
-              tstart = tstart_alt
-            end if
-            delete(tstart_alt)
-          end if
-; bundy 2026-10-20: output stamped at interval ends (03:00, 06:00, ... for 3-hourly data)
-; has no sample at hour 00 or 01 on the first day of the record, which then starts at 03.
-; If the record starts partway through the requested first day, start this month on day 2
-; (day 1 is incomplete) and weight the month by one day less.
-          if (ismissing(itm0) .and. tstart.lt.min(t_utc) .and. min(t_utc).lt.(tstart+100)) then
-            tstart_day2 = tstart + 100
-            itm0 = ind(t_utc.eq.tstart_day2)
-            if (.not.ismissing(itm0)) then
-              print("- Record starts at "+min(t_utc)+", after "+tstart+"; starting this month on day 2 ("+tstart_day2+")")
-              tstart = tstart_day2
-              wgt_mon = wgt_mon - 1
-            end if
-            delete(tstart_day2)
-          end if
-          if (ismissing(itm0)) then
-            print("*** Requested start date does not exist in available data - exiting ...")
-            exit
-          end if
 ; dt for the first timestep
-          dtime = where(t_utc(itm0+1)-t_utc(itm0).gt.24,t_utc(itm0+1)-t_utc(itm0)-100+24,t_utc(itm0+1)-t_utc(itm0)); Convoluted but corrects for incrementing day and resetting hour.  
+            dtime = where(t_utc(itm0+1)-t_utc(itm0).gt.24,t_utc(itm0+1)-t_utc(itm0)-100+24,t_utc(itm0+1)-t_utc(itm0)); Convoluted but corrects for incrementing day and resetting hour.  
           
 ; Can now determine stop time given dt
-          tstop = tstart+toint(wgt_mon-1)*100+(24-toint(dtime))
-          itm1 = ind(t_utc.eq.tstop)
+            tstop = tstart+toint(wgt_mon-1)*100+(24-toint(dtime))
+            itm1 = ind(t_utc.eq.tstop)
           
 ; Check constant dt across requested month
-          do it=itm0+2,itm1,1 
-            dtimei =  where(t_utc(it)-t_utc(it-1).gt.24,t_utc(it)-t_utc(it-1)-100+24,t_utc(it)-t_utc(it-1)) ; Convoluted but corrects for incrementing day and resetting hour.
-            if (dtime.ne.dtimei) then
-              print("**** Timestep not constant through timeseries - exiting...")
+            do it=itm0+2,itm1,1 
+              dtimei =  where(t_utc(it)-t_utc(it-1).gt.24,t_utc(it)-t_utc(it-1)-100+24,t_utc(it)-t_utc(it-1)) ; Convoluted but corrects for incrementing day and resetting hour.
+              if (dtime.ne.dtimei) then
+                print("**** Timestep not constant through timeseries - exiting...")
+                exit
+              end if          
+            end do
+          
+            print("- Data time resolution is a constant "+dtime+" hours")
+          
+            print("- Input time range = "+min(t_utc)+" to "+max(t_utc))
+            print("- Requested  range = "+tstart+" to "+tstop)
+          
+            if (tstart.lt.min(t_utc).or.tstop.gt.max(t_utc)) then
+              print("Predicted data range not available in input data - exiting...")
               exit
-            end if          
-          end do
-          
-          print("- Data time resolution is a constant "+dtime+" hours")
-          
-          print("- Input time range = "+min(t_utc)+" to "+max(t_utc))
-          print("- Requested  range = "+tstart+" to "+tstop)
-          
-          if (tstart.lt.min(t_utc).or.tstop.gt.max(t_utc)) then
-            print("Predicted data range not available in input data - exiting...")
-            exit
+            else
+              print("- Correct time range is available: "+tstart+" to "+tstop)
+              itime0 =  ind(t_utc.eq.tstart)
+              itime1 =  ind(t_utc.eq.tstop)
+              print("- Data istart-istop-ntime indices = "+itime0+" "+itime1+" "+(/dimsizes(time)/))
+            end if
           else
-            print("- Correct time range is available: "+tstart+" to "+tstop)
-            itime0 =  ind(t_utc.eq.tstart)
-            itime1 =  ind(t_utc.eq.tstop)
+; bundy 2026-10-20: pick this month's samples by the CENTER of each sample's time
+; interval. Time-averaged CESM output is stamped at the end of the interval in older runs
+; (e.g. 03:00 for 00-03) and at the middle in newer ones (01:30), so a fixed start hour
+; picks the wrong samples for one of them and shifts the phase. The center is the mean of
+; the time bounds when the file has them (the MDTF preprocessor drops them, so usually not).
+; Without bounds, for time-averaged data (the variable has cell_methods), look at where the
+; first time stamp falls within a sampling interval dt, measured from the reference time of
+; the time units: fraction = time/dt - floor(time/dt).
+;   - near 0 (< 0.25 or > 0.75): the stamp is on an interval boundary (00:00, 03:00, ...), so
+;     it marks the end of the interval and the center is half an interval earlier;
+;   - near 0.5: the stamp is already at the middle (01:30, 04:30, ...) and is used as is.
+; This assumes the averaging intervals are aligned with the reference time of the time units
+; (true for CESM, whose units are "days since <date> 00:00:00") and that nobody stamps at the
+; interval start (CESM stamps ends or midpoints; CMIP midpoints). Instantaneous data (no
+; cell_methods) is used as stamped. Each month must also have a constant sample spacing.
+; slot0_hour, the UTC hour of the first sample's center, sets the phase further down.
+            tave = isfilevaratt(inptr[0], var_name, "cell_methods") .or. isfilevaratt(inptr[0], var_name, "cell_method")
+            dt_t = time(1) - time(0)   ; sample spacing in the file's time units
+            tc = time
+            bname = ""
+            if (isfilevar(inptr[0], "time_bnds")) then
+              bname = "time_bnds"
+            end if
+            if (isfilevar(inptr[0], "time_bounds")) then
+              bname = "time_bounds"
+            end if
+            if (bname.ne."") then
+              tb = inptr[:]->$bname$
+              tc = (/ 0.5*(tb(:,0)+tb(:,1)) + tpert /)
+              if (abs(time(0)-tpert-tb(0,1)).lt.0.01*dt_t) then
+                stamp = "interval end"
+              else if (abs(time(0)-tc(0)).lt.0.01*dt_t) then
+                stamp = "interval middle"
+              else
+                stamp = "other"
+              end if
+              end if
+              stamp = stamp+" (from "+bname+")"
+              delete(tb)
+            else if (tave) then
+              frac = (time(0)-tpert)/dt_t - floor((time(0)-tpert)/dt_t)
+              if (frac.lt.0.25 .or. frac.gt.0.75) then
+                tc = (/ time - 0.5*dt_t /)
+                stamp = "interval end (no time bounds; inferred from the time values)"
+              else
+                stamp = "interval middle (no time bounds; inferred from the time values)"
+              end if
+              delete(frac)
+            else
+              stamp = "instantaneous"
+            end if
+            end if
+            th = cd_convert(tc, "hours since 0001-01-01 00:00:00")
+            dtime = round(th(1)-th(0), 3)
+            tcu = cd_calendar(tc, 0)
+            isel = ind(toint(tcu(:,0)).eq.toint(run_years(iyear)) .and. toint(tcu(:,1)).eq.toint(months(imonth)))
+            nexp = round(wgt_mon*24./dtime, 3)
+            print("- Time stamps: "+stamp)
+            print("- Data time resolution is "+dtime+" hours; input time range = "+min(t_utc)+" to "+max(t_utc))
+            if (all(ismissing(isel))) then
+              print("*** No samples centered in this month - exiting ...")
+              exit
+            end if
+            itime0 = min(isel)
+            itime1 = max(isel)
+            nsel = dimsizes(isel)
+            if ((itime1-itime0+1).ne.nsel .or. nsel.gt.nexp) then
+              print("*** Samples centered in this month are not contiguous - exiting ...")
+              exit
+            end if
+            if (nsel.lt.nexp) then
+; A record can end partway through its last month (e.g. a run's end date drops the sample
+; stamped at 00:00 on the 1st of the next month). That is usable as long as the month's
+; first sample is there, so the composite slots still line up; weight it by its length.
+              if (toint(tcu(itime0,2)).ne.1 .or. (tcu(itime0,3)+tcu(itime0,4)/60.).ge.dtime) then
+                print("*** Expected "+nexp+" samples centered in this month, found "+nsel+ \
+                      ", and the month's first sample is missing - exiting ...")
+                exit
+              end if
+              wgt_mon = nsel*dtime/24.
+              print("- WARNING: only "+nsel+" of "+nexp+" samples in this month (record ends); weight = "+wgt_mon+" days")
+            end if
+            delete(nsel)
+            if (max(abs(th(itime0+1:itime1)-th(itime0:itime1-1)-dtime)).gt.0.01) then
+              print("**** Timestep not constant through this month - exiting...")
+              exit
+            end if
+            slot0_hour = tofloat(th(itime0) - 24.*floor(th(itime0)/24.))
+            print("- Using "+nexp+" samples, centers "+cd_calendar(tc(itime0),-3)+" to "+cd_calendar(tc(itime1),-3)+ \
+                  "; first sample centered at "+slot0_hour+" UTC")
             print("- Data istart-istop-ntime indices = "+itime0+" "+itime1+" "+(/dimsizes(time)/))
+            delete([/tc, th, tcu, isel/])
           end if
           
           print("** Grabbing data")
@@ -771,7 +835,11 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
       
       do ilon=0,nlon-1
         hour_lon = doubletofloat(24.*lon(ilon)/360.)      ; Local time zone offset (hours) from 00Z.
-        hour_offset = hour_lon-hour_tave_cent ; Full offset with start time and for time_averaged time cetneraing
+        if (obs(irun)) then
+          hour_offset = hour_lon-hour_tave_cent ; Full offset with start time and for time_averaged time cetneraing
+        else
+          hour_offset = hour_lon+slot0_hour ; local time offset plus the UTC hour of the first composite slot's center
+        end if
 ; Loop over harmonics for offset for long and time
         do iharm=0,nharm-1 
           hhoffm = 24./harm_ph(iharm) ; Phase offset maxx (cyclic)
