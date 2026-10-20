@@ -566,6 +566,20 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
             end if
             delete(tstart_alt)
           end if
+; bundy 2026-10-20: output stamped at interval ends (03:00, 06:00, ... for 3-hourly data)
+; has no sample at hour 00 or 01 on the first day of the record, which then starts at 03.
+; If the record starts partway through the requested first day, start this month on day 2
+; (day 1 is incomplete) and weight the month by one day less.
+          if (ismissing(itm0) .and. tstart.lt.min(t_utc) .and. min(t_utc).lt.(tstart+100)) then
+            tstart_day2 = tstart + 100
+            itm0 = ind(t_utc.eq.tstart_day2)
+            if (.not.ismissing(itm0)) then
+              print("- Record starts at "+min(t_utc)+", after "+tstart+"; starting this month on day 2 ("+tstart_day2+")")
+              tstart = tstart_day2
+              wgt_mon = wgt_mon - 1
+            end if
+            delete(tstart_day2)
+          end if
           if (ismissing(itm0)) then
             print("*** Requested start date does not exist in available data - exiting ...")
             exit
