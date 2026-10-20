@@ -23,8 +23,9 @@ end if
 
 use_hybrid_sigma = (getenv("USE_HYBRID_SIGMA").eq."1")
 
-firstyr = stringtointeger(yr1)
-lastyr = stringtointeger(yr2)
+; bundy 2026-10-20: MDTF v4 passes startdate/enddate as full dates (YYYYMMDD...); use the years
+firstyr = stringtointeger(str_get_cols(yr1,0,3))
+lastyr = stringtointeger(str_get_cols(yr2,0,3))
 ;;date_offset = stringtointeger(date_off) ; 1 for native CESM, 0 for GFDL & CMIP
 nyrs = lastyr-firstyr+1
 nmons = nyrs*12
@@ -78,22 +79,51 @@ end do
 
 time_all = f_zg->$time_coord$
 
-if (date_offset.eq.0) then
-   print("Using CMIP/GFDL date index YYYYMM")
-   ; CMIP / GFDL date index, use YYYYMM
-   date_all = cd_calendar(time_all,-1)
-   year_all = date_all/100
-   start_date = firstyr*100+1
-   end_date = (lastyr)*100+12
-else if (date_offset.eq.1) then
-     print("Using CESM date index YYYYMMDD")
-   ; CESM native date index, use YYYYMMDD
-   date_all = cd_calendar(time_all,-2)
-   year_all = date_all/10000
-   start_date = firstyr*10000+201
-   end_date = (lastyr+1)*10000+101
+; bundy 2026-10-20: label each sample with the month it averages (YYYYMM), whatever the
+; time-stamp convention. Older CESM stamps a monthly mean at the end of the month (00:00 on the
+; 1st of the next month), newer CESM and CMIP in the middle. Use the center of the time bounds
+; when the file has them; otherwise take a stamp at 00:00 on the 1st as the end of the previous
+; month. Then keep only the full years (January to December) inside the requested range.
+if (isfilevar(f_zg,"time_bnds") .or. isfilevar(f_zg,"time_bounds")) then
+   if (isfilevar(f_zg,"time_bnds")) then
+      tb = f_zg->time_bnds
+   else
+      tb = f_zg->time_bounds
+   end if
+   tmid = time_all
+   tmid = (/ 0.5*(tb(:,0)+tb(:,1)) /)
+   utc = cd_calendar(tmid,0)
+   yy = toint(utc(:,0))
+   mm = toint(utc(:,1))
+   print("Monthly samples labeled by the center of their time bounds")
+   delete([/tb, tmid/])
+else
+   utc = cd_calendar(time_all,0)
+   yy = toint(utc(:,0))
+   mm = toint(utc(:,1))
+   endstamp = toint(utc(:,2)).eq.1 .and. utc(:,3).eq.0 .and. utc(:,4).eq.0
+   if (all(endstamp)) then
+      print("Monthly samples stamped at the end of the month (no time bounds); using the previous month")
+      yy = where(mm.eq.1, yy-1, yy)
+      mm = where(mm.eq.1, 12, mm-1)
+   else
+      print("Monthly samples labeled by their time stamp's month (no time bounds)")
+   end if
+   delete(endstamp)
 end if
-end if
+date_all = yy*100+mm
+delete([/utc, yy, mm/])
+do while (firstyr.lt.lastyr .and. .not.any(date_all.eq.firstyr*100+1))
+   firstyr = firstyr+1
+end do
+do while (lastyr.gt.firstyr .and. .not.any(date_all.eq.lastyr*100+12))
+   lastyr = lastyr-1
+end do
+nyrs = lastyr-firstyr+1
+nmons = nyrs*12
+start_date = firstyr*100+1
+end_date = lastyr*100+12
+print("Using "+start_date+" to "+end_date)
 
 ; in either case, above only used to set following indices
 do i=0,dimsizes(date_all)-1

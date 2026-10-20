@@ -14,9 +14,13 @@ rgb = getenv("RGB")
 wk_dir = getenv("WORK_DIR")
 casename = getenv("CASENAME")
 
-firstyr = stringtointeger(yr1)
-lastyr = stringtointeger(yr2)
+; bundy 2026-10-20: take the years from the anomaly file, since compute_anomalies.ncl may
+; trim the requested range to the full years in the data
+fyr = addfile(wk_dir+"/model/netCDF/"+casename+".Z500.ANOMS.nc","r")
+firstyr = toint(min(fyr->year))-1
+lastyr = toint(max(fyr->year))
 nyrs = lastyr-firstyr
+delete(fyr)
 
 ; get pointer to netcdf file  
  f = addfile (wk_dir+"/model/netCDF/"+casename+".Z500.ANOMS.nc","r") 
