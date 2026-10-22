@@ -598,10 +598,20 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
 ;   - near 0.5: the stamp is already at the middle (01:30, 04:30, ...) and is used as is.
 ; This assumes the averaging intervals are aligned with the reference time of the time units
 ; (true for CESM, whose units are "days since <date> 00:00:00") and that nobody stamps at the
-; interval start (CESM stamps ends or midpoints; CMIP midpoints). Instantaneous data (no
-; cell_methods) is used as stamped. Each month must also have a constant sample spacing.
+; interval start (CESM stamps ends or midpoints; CMIP midpoints). cell_methods decides
+; whether the data are averages or instantaneous: CAM marks instantaneous fields
+; "time: point" (h*i streams) and averages "time: mean". Instantaneous data ("time: point",
+; or no cell_methods) are used as stamped, even if the file has time bounds. Each month must
+; also have a constant sample spacing.
 ; slot0_hour, the UTC hour of the first sample's center, sets the phase further down.
-            tave = isfilevaratt(inptr[0], var_name, "cell_methods") .or. isfilevaratt(inptr[0], var_name, "cell_method")
+            cm = ""
+            if (isfilevaratt(inptr[0], var_name, "cell_methods")) then
+              cm = inptr[0]->$var_name$@cell_methods
+            else if (isfilevaratt(inptr[0], var_name, "cell_method")) then
+              cm = inptr[0]->$var_name$@cell_method
+            end if
+            end if
+            tave = cm.ne."" .and. .not.isStrSubset(cm, "time: point")
             dt_t = time(1) - time(0)   ; sample spacing in the file's time units
             tc = time
             bname = ""
@@ -611,7 +621,9 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
             if (isfilevar(inptr[0], "time_bounds")) then
               bname = "time_bounds"
             end if
-            if (bname.ne."") then
+            if (.not.tave) then
+              stamp = "instantaneous (cell_methods '"+cm+"'), used as stamped"
+            else if (bname.ne."") then
               tb = inptr[:]->$bname$
               tc = (/ 0.5*(tb(:,0)+tb(:,1)) + tpert /)
               if (abs(time(0)-tpert-tb(0,1)).lt.0.01*dt_t) then
@@ -624,7 +636,7 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
               end if
               stamp = stamp+" (from "+bname+")"
               delete(tb)
-            else if (tave) then
+            else
               frac = (time(0)-tpert)/dt_t - floor((time(0)-tpert)/dt_t)
               if (frac.lt.0.25 .or. frac.gt.0.75) then
                 tc = (/ time - 0.5*dt_t /)
@@ -633,10 +645,9 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
                 stamp = "interval middle (no time bounds; inferred from the time values)"
               end if
               delete(frac)
-            else
-              stamp = "instantaneous"
             end if
             end if
+            delete(cm)
             th = cd_convert(tc, "hours since 0001-01-01 00:00:00")
             dtime = round(th(1)-th(0), 3)
             tcu = cd_calendar(tc, 0)
@@ -714,12 +725,15 @@ ps_name = ps_name0+"_pr."+region_plot+".dc."
 ; as it requires adjustment later.   
           
           hour_tave_cent = 0.
-          if (isatt(invar,"cell_method").or.isatt(invar,"cell_methods")) then
-            if (isatt(invar,"cell_method")) then
-              vcell_method = invar@cell_method
-            else
-              vcell_method = invar@cell_methods
-            end if
+          vcell_method = ""
+          if (isatt(invar,"cell_method")) then
+            vcell_method = invar@cell_method
+          else if (isatt(invar,"cell_methods")) then
+            vcell_method = invar@cell_methods
+          end if
+          end if
+; bundy 2026-10-22: "time: point" marks instantaneous data (CAM h*i streams)
+          if (vcell_method.ne."" .and. .not.isStrSubset(vcell_method, "time: point")) then
     ;        if (vcell_method.eq."time: mean") then
               tinst = False
               hour_tave_cent = tofloat(dtime)/2

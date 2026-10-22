@@ -42,21 +42,26 @@ a convective and large-scale combination.
 Time stamps of model output
 ---------------------------
 
-Time-averaged model output can be stamped at the end of each averaging interval (older CESM,
-e.g. 03:00 for the 00:00-03:00 mean) or at its middle (newer CESM and CMIP, 01:30). The
-diagnostic uses the center of each sample's interval, so both work:
+The precipitation variable's ``cell_methods`` attribute decides how its time stamps are used.
+Instantaneous data (``time: point``, as CAM writes for its instantaneous ``h*i`` streams, or no
+``cell_methods`` at all) are sampled at the stamped time, which is used as is, even if the file
+has time bounds.
+
+Time-averaged model output (any other ``cell_methods``, e.g. ``time: mean``) can be stamped at
+the end of each averaging interval (older CESM, e.g. 03:00 for the 00:00-03:00 mean) or at its
+middle (newer CESM and CMIP, 01:30). The diagnostic uses the center of each sample's interval,
+so both work:
 
 - When the input file has time bounds (``time_bnds`` or ``time_bounds``), the center is the
   mean of the two bounds.
-- Otherwise (the MDTF preprocessor does not keep the bounds), for time-averaged data
-  (the variable has ``cell_methods``) the stamp style is inferred from where the first time
-  stamp falls within one sampling interval, counted from the reference time of the time units.
+- Otherwise (the MDTF preprocessor does not keep the bounds), the stamp style is inferred
+  from where the first time stamp falls within one sampling interval, counted from the
+  reference time of the time units.
   A stamp on an interval boundary (00:00, 03:00, ...) is taken as the interval end, and the
   center is half an interval earlier; a stamp half an interval in (01:30, 04:30, ...) is
   already the center. This assumes the intervals are aligned with the reference time (true
   for CESM output, whose time units start at 00:00) and that stamps are never at the
   interval start.
-- Instantaneous data (no ``cell_methods``) is used as stamped.
 
 Each month uses the samples whose centers fall in that month, and the diurnal phase is
 computed from the actual center hour of the first sample. A month cut short at the end of the
