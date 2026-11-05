@@ -375,9 +375,25 @@ class RenameVariablesFunction(PreprocessorFunctionBase):
                     translated.append(dname)
             except:
                 pass
-        [rename_d.pop(t) for t in translated]
+        moved = {t: rename_d.pop(t) for t in translated}
+        ds = ds.rename(rename_d)
 
-        return ds.rename(rename_d)
+        # All variables of a case share one dataset. When an earlier variable already renamed a coordinate,
+        # this variable is still on the old one (process() re-adds it from the unrenamed dataset), so the
+        # skip above would leave it untranslated. Move it onto the existing coordinate if the values agree,
+        # and drop the old coordinate once nothing uses it.
+        for dname, tname in moved.items():
+            if tv.name not in ds or dname not in ds[tv.name].dims or tname not in ds.dims:
+                continue
+            if ds.sizes[dname] != ds.sizes[tname] or not np.array_equal(ds[dname].values, ds[tname].values):
+                var.log.warning("Not moving %s of %s onto existing '%s': coordinate values differ.",
+                                dname, var.full_name, tname)
+                continue
+            ds[tv.name] = ds[tv.name].rename({dname: tname})
+            if not any(dname in ds[v].dims for v in ds.data_vars):
+                ds = ds.drop_vars(dname)
+
+        return ds
 
 
 class AssociatedVariablesFunction(PreprocessorFunctionBase):
