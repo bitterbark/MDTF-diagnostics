@@ -293,13 +293,15 @@ print("Model working directory: ", WK_DIR, "model/")
 
 so_var = "{so_var}".format(**os.environ)
 thetao_var = "{thetao_var}".format(**os.environ)
-firstyr = "{startdate}".format(**os.environ)
-lastyr = "{enddate}".format(**os.environ)
+# MDTF v4 passes startdate/enddate as YYYYMMDD; this script works with years
+firstyr = "{startdate}".format(**os.environ)[:4]
+lastyr = "{enddate}".format(**os.environ)[:4]
 
 print("thetao_var, so_var, startdate, enddate: ", thetao_var, so_var, firstyr, lastyr)
 
-input_file_so = DATADIR+"/mon/"+CASENAME+"."+so_var+".mon.nc"
-input_file_thetao = DATADIR+"/mon/"+CASENAME+"."+thetao_var+".mon.nc"
+# MDTF v4 passes each preprocessed file as <VAR>_FILE; the DATADIR path is the v3 layout
+input_file_so = os.environ.get("SO_FILE", DATADIR+"/mon/"+CASENAME+"."+so_var+".mon.nc")
+input_file_thetao = os.environ.get("THETAO_FILE", DATADIR+"/mon/"+CASENAME+"."+thetao_var+".mon.nc")
 
 output_dir = os.path.join(WK_DIR, "model")  # LR
 figures_dir = os.path.join(WK_DIR, "model")  # LR
