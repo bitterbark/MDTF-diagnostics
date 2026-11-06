@@ -19,15 +19,22 @@ This package is distributed under the LGPLv3 license (see LICENSE.txt).
 Functionality
 -------------
 
-All scripts can be found at: ``mdtf/MDTF_$ver/var_code/MJO_suite``
+The POD is written in Python (it was ported from NCL in 2026; the Python version reproduces the
+NCL numbers, see the module docstrings). Scripts are in ``diagnostics/MJO_suite``; the driver
+``MJO_suite.py`` runs, in order:
 
-1. Read in daily model output: daily_netcdf.ncl
-2. Computes daily anomalies: daily_anom.ncl
-3. Calculates EOFs: mjo_EOF.ncl
-4. Creates​ ​MJO lag plots: mjo_lag_lat_lon.ncl
-5. Calculates MJO spectra: mjo_spectra.ncl
-6. Calculates principle component from EOF analysis: mjo_EOF_cal.ncl
-7. MJO life cycle composite: mjo_life_cycle_v2.ncl
+1. Read in daily model output: daily_netcdf.py (missing days are filled by linear interpolation in time)
+2. Computes daily anomalies: daily_anom.py
+3. Calculates EOFs: mjo_EOF.py
+4. Creates MJO lag plots: mjo_lag_lat_lon.py
+5. Calculates MJO spectra: mjo_spectra.py
+6. Calculates principal components from the combined EOF analysis: mjo_EOF_cal.py
+7. MJO life cycle composite: mjo_life_cycle.py
+8. U200 band-pass time series: mjo_u200_index.py
+
+Numerical routines (Lanczos filter, EOFs, lagged correlations, wavenumber-frequency spectra) are in
+``mjo_utils.py``; plotting helpers are in ``mjo_plots.py``. Python ports of several of these
+routines were started in https://github.com/cyschneck/geocat-research/tree/main/mjo .
 
 | Preprocessed observational data from NCEP, ERA and TRMM are located in ``mdtf/inputdata/obs_data/MJO_suite``.
 | Place your input data at: ``mdtf/inputdata/model/$model_name/day``
@@ -36,8 +43,8 @@ All scripts can be found at: ``mdtf/MDTF_$ver/var_code/MJO_suite``
 Required Programing Language and libraries
 ------------------------------------------
 
-| All these scripts required NCAR Command Language Version 6.3.0 or higher
-| The following Python packages are required: os, glob
+| Python 3 with numpy, scipy, xarray, netCDF4, cftime, matplotlib and cartopy
+  (all in the MDTF ``_MDTF_python3_base`` environment). NCL is no longer needed.
 
 Required input data to the module
 ---------------------------------

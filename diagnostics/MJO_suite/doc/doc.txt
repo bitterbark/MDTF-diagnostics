@@ -13,4 +13,4 @@ Figures produced
 <li> Composite life cycles
 
 Data requirements: daily fields of precipation, rlut, u200, u850, v200, v850
-The code is in NCL
+The code is in Python (ported from NCL)

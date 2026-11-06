@@ -11,8 +11,7 @@
     "convention" : "cesm",
     "description" : "MJO CLIVAR suite (NCAR)",
     "runtime_requirements": {
-      "python3": [],
-      "ncl": ["contributed", "gsn_code", "gsn_csm", "shea_util", "diagnostics_cam"]
+      "python3": ["numpy", "scipy", "xarray", "netCDF4", "cftime", "matplotlib", "cartopy"]
     } 
   }, //setttings
   "data": {

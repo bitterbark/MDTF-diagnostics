@@ -1,0 +1,55 @@
+MJO_suite: NCL to Python port (2026-11)
+=======================================
+
+The NCL scripts of MJO_suite were replaced by Python modules (same step order, same output figure
+names). Starting point: the partial Python ports in
+https://github.com/cyschneck/geocat-research/tree/main/mjo (wavenumber-frequency spectra,
+resolveWavesHayashi, taper, Lanczos weights). Those notebooks were incomplete (no life cycle,
+lag plots, combined EOF) and used a plain running mean in place of the Lanczos filter, so the
+routines here were rewritten and checked against NCL 6.6.2.
+
+Module               replaces
+-------------------  ------------------------------------------------------------
+MJO_suite.py         MJO_suite.py (driver that called ncl)
+daily_netcdf.py      daily_netcdf.ncl, utils.ncl (read_model_file, get_gw, linint2)
+daily_anom.py        daily_anom.ncl, calc_utils.ncl compute_daily_anom
+mjo_EOF.py           mjo_EOF.ncl
+mjo_lag_lat_lon.py   mjo_lag_lat_lon.ncl (+ diagnostics_cam.ncl mjo_xcor_lag*)
+mjo_spectra.py       mjo_spectra.ncl, my_cam_diags.ncl (+ mjo_wavenum_freq_season)
+mjo_EOF_cal.py       mjo_EOF_cal.ncl
+mjo_life_cycle.py    mjo_life_cycle.ncl
+mjo_u200_index.py    mjo.ncl
+mjo_utils.py         NCL built-ins: filwgts_lanczos, wgt_runave(_leftdim), runave, dtrend,
+                     taper, smth9, eofunc, eofunc_ts, esccr, escorc, linmsg_n, cd_calendar
+mjo_plots.py         NCL color tables BlWhRe, ViBlGrWhYeOrRe, precip2_17lev; map helpers
+
+Unit checks against NCL 6.6.2 (same random inputs, max relative difference)
+  filwgts_lanczos(201,2,1/100,1/20,1)  5e-8  (NCL uses nw+1 in the sigma factor and normalizes
+                                              each low-pass filter to unit sum)
+  wgt_runave (opt 0)                   5e-8  (ends and windows with missing -> missing)
+  runave, dtrend, taper, smth9, escorc <1e-12
+  esccr                                2e-5
+  eofunc / eofunc_ts / pcvar / eval    1e-14 / 7e-15 / 6e-8 / 6e-16  (EOF sign is arbitrary)
+  mjo_wavenum_freq_season              1e-7
+  mjo_xcor_lag                         6e-4  (NCL ran in float32)
+
+Intentional differences from the NCL version
+  - Missing values are filled by linear interpolation in time at each grid point before any
+    analysis (NCL linmsg_n(x,-1,0); ends take the nearest valid value). The NCL version had no
+    fill, so missing days (e.g. the 30 all-missing days of the NOAA daily OLR CDR) broke the
+    filter and EOFs.
+  - Intermediate netCDF files go to $WORK_DIR/model/netCDF/ (was $WORK_DIR/model/), so the
+    framework can clean them up.
+  - EOF sign: fixed so each EOF sums to a positive value (NCL's sign came from LAPACK). The
+    life-cycle figures are still made for both PC1 signs (.v2), as before.
+  - Daily climatology for real-calendar data: Feb 29 is averaged with Feb 28. NCL forced a
+    noleap calendar on all data, which shifts dates after each leap day.
+  - mjo_xcor_lag: Fisher-z mean over the segments actually used. NCL divided by the number of
+    season start dates, including a final incomplete segment (affects "annual" when the last
+    year is incomplete).
+  - Figures are made with matplotlib/cartopy and look similar but not identical to NCL's.
+  - The EOF time series in mjo_EOF.ncl were passed through wgt_runave_Wrap(ts,121,1), which
+    with a single weight returns the series unchanged; the Python version plots the same
+    unsmoothed series.
+  - The 3-D field + PS vertical interpolation path of utils.ncl (pinterp) is not ported: the
+    framework always supplies the 200/850 hPa fields requested in settings.jsonc.

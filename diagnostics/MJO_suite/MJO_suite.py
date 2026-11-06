@@ -1,70 +1,59 @@
 # This file is part of the MJO_suite module of the MDTF code package (see LICENSE.txt)
+"""MJO_suite driver (Python version; replaces the NCL scripts of the AMWG/MJO CLIVAR suite).
 
-#============================================================
-# EOF of 500hPa Height Diagnostics
-# Sample code to call NCL from python 
-#============================================================
-
+Steps, each in its own module (the NCL script it replaces in parentheses):
+  1. daily_netcdf     read inputs, period, 40S-40N, fill missing days  (daily_netcdf.ncl, utils.ncl)
+  2. daily_anom       remove the daily climatology                     (daily_anom.ncl, calc_utils.ncl)
+  3. mjo_EOF          single-variable seasonal EOFs                    (mjo_EOF.ncl)
+  4. mjo_lag_lat_lon  lag-longitude / lag-latitude correlations         (mjo_lag_lat_lon.ncl)
+  5. mjo_spectra      wavenumber-frequency spectra                      (mjo_spectra.ncl, my_cam_diags.ncl)
+  6. mjo_EOF_cal      combined OLR/U850/U200 EOF -> MJO_PC_INDEX.nc     (mjo_EOF_cal.ncl)
+  7. mjo_life_cycle   MJO phase composites                              (mjo_life_cycle.ncl)
+  8. mjo_u200_index   U200 band-pass time series                        (mjo.ncl)
+Numerical routines are in mjo_utils.py, plotting helpers in mjo_plots.py.
+"""
 import os
-import subprocess
+import sys
 import time
+import traceback
 
-# ============================================================
-# generate_ncl_plots - call a nclPlotFile via subprocess call
-# ============================================================
+sys.path.insert(0, os.environ["POD_HOME"])
 
+import daily_netcdf  # noqa: E402
+import daily_anom  # noqa: E402
+import mjo_EOF  # noqa: E402
+import mjo_lag_lat_lon  # noqa: E402
+import mjo_spectra  # noqa: E402
+import mjo_EOF_cal  # noqa: E402
+import mjo_life_cycle  # noqa: E402
+import mjo_u200_index  # noqa: E402
 
-def generate_ncl_plots(nclPlotFile):
-    """generate_plots_call - call a nclPlotFile via subprocess call
-   
-    Arguments:
-    nclPlotFile (string) - full path to ncl plotting file name
-    """
-    # check if the nclPlotFile exists - 
-    # don't exit if it does not exist just print a warning.
+STEPS = [
+    ("OBTAINING DAILY OUTPUT", daily_netcdf, True),
+    ("COMPUTING DAILY ANOMALIES", daily_anom, True),
+    ("COMPUTING MJO EOF (may take a while for long time samples)", mjo_EOF, False),
+    ("MJO lag plots", mjo_lag_lat_lon, False),
+    ("MJO spectra", mjo_spectra, False),
+    ("MJO combined EOF and PC index", mjo_EOF_cal, False),
+    ("MJO life cycle composite", mjo_life_cycle, False),
+    ("MJO U200 time series", mjo_u200_index, False),
+]
+
+failed = []
+for title, module, required in STEPS:
+    print(title, flush=True)
+    t0 = time.time()
     try:
-        pipe = subprocess.Popen(['ncl {0}'.format(nclPlotFile)], shell=True, stdout=subprocess.PIPE)
-        output = pipe.communicate()[0].decode()
-        print('NCL routine {0} \n {1}'.format(nclPlotFile,output))            
-        while pipe.poll() is None:
-            time.sleep(0.5)
-    except OSError as e:
-        print('WARNING', e.errno, e.strerror)
-    return 0
+        module.main()
+    except Exception:
+        traceback.print_exc()
+        failed.append(module.__name__)
+        if required:
+            print(f"ERROR: MJO_suite step {module.__name__} failed; later steps need its output.")
+            break
+    print(f"{module.__name__} finished in {time.time() - t0:.0f} s", flush=True)
 
-# ============================================================
-# Call NCL code here
-# ============================================================
-
-
-if not os.path.exists(os.path.join(os.environ['DATADIR'], 'day')):
-    os.makedirs(os.path.join(os.environ['DATADIR'], 'day'))
-
-print("OBTAINING DAILY OUTPUT")
-generate_ncl_plots(os.environ["POD_HOME"]+"/daily_netcdf.ncl")
-
-print("COMPUTING DAILY ANOMALIES")
-generate_ncl_plots(os.environ["POD_HOME"]+"/daily_anom.ncl")
-
-print("COMPUTING MJO EOF (may take a while for long time samples)")
-generate_ncl_plots(os.environ["POD_HOME"]+"/mjo_EOF.ncl")
-
-print("MJO lag plots")
-generate_ncl_plots(os.environ["POD_HOME"]+"/mjo_lag_lat_lon.ncl")
-
-print("MJO spectra")
-generate_ncl_plots(os.environ["POD_HOME"]+"/mjo_spectra.ncl")
-
-if os.path.isfile( os.environ["WORK_DIR"]+"/model/netCDF/MJO_PC_INDEX.nc"):
-    print("WARNING: MJO_PC_INDEX.nc already exists. Not re-running.")
-else:
-    generate_ncl_plots(os.environ["POD_HOME"]+"/mjo_EOF_cal.ncl")
-   
-print("MJO life cycle composite")
-
-# This has a loop to generate two sets of figures, on with -1*PC
-generate_ncl_plots(os.environ["POD_HOME"]+"/mjo_life_cycle.ncl")
-
-generate_ncl_plots(os.environ["POD_HOME"]+"/mjo.ncl")
-
+if failed:
+    print("MJO_suite.py finished with errors in: " + ", ".join(failed))
+    sys.exit(1)
 print("MJO_suite.py finished.")
