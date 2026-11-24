@@ -182,8 +182,9 @@ print("=======================================")
 # Parse MDTF-set environment variables
 print("*** Parse MDTF-set environment variables ...")
 CASENAME = os.environ["CASENAME"]
-FIRSTYR = int(os.environ["startdate"])
-LASTYR = int(os.environ["enddate"])
+# MDTF v4 passes startdate/enddate as full dates (YYYYMMDD...); the year is the first four characters
+FIRSTYR = int(os.environ["startdate"][:4])
+LASTYR = int(os.environ["enddate"][:4])
 WK_DIR = os.environ["WORK_DIR"]
 OBS_DATA = os.environ["OBS_DATA"]
 
@@ -197,8 +198,14 @@ obs_plot_dir = f"{WK_DIR}/obs/PS/"
 print("*** Parsing POD-specific environment variables")
 ANOM_METHOD = os.environ["ANOM_METHOD"]
 PRED_LEV = int(os.environ["PRED_LEV"])
-SAVE_DERIVED_DATA = bool(int(os.environ["SAVE_DERIVED_DATA"]))
-USE_CONSISTENT_YEARS = bool(int(os.environ["USE_CONSISTENT_YEARS"]))
+
+def env_bool(name):
+    """settings.jsonc booleans arrive as "True"/"False" in MDTF v4 (older versions passed 1/0)."""
+    return os.environ[name].strip().lower() in ("1", "true", "yes")
+
+
+SAVE_DERIVED_DATA = env_bool("SAVE_DERIVED_DATA")
+USE_CONSISTENT_YEARS = env_bool("USE_CONSISTENT_YEARS")
 OBS_FIRSTYR = int(os.environ["OBS_FIRSTYR"])
 OBS_LASTYR = int(os.environ["OBS_LASTYR"])
 
@@ -239,6 +246,11 @@ print("*** Now reading in pre-digested obs data")
 try:
     obs_am = xr.open_dataarray(f"{OBS_DATA}/era5_annmodes_1979-2021.nc")
     obs_am = obs_am.sel(time=slice(f'{OBS_FIRSTYR}', f'{OBS_LASTYR}'))
+    # as for the model data above: the dayofyear plots need a 365 (or 360) day calendar, and obs made by
+    # make_rean_pod-data.py from standard-calendar reanalysis keep Feb 29
+    if int(obs_am['time.dayofyear'].max()) == 366:
+        print("*** Removing leapdays from obs data")
+        obs_am = obs_am.convert_calendar('noleap', use_cftime=True)
     obs_nam_struc = xr.open_dataarray(f"{OBS_DATA}/era5_nam_lat-struc_1979-2021.nc")
     obs_sam_struc = xr.open_dataarray(f"{OBS_DATA}/era5_sam_lat-struc_1979-2021.nc")
     can_plot_obs = True
